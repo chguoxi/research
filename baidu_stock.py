@@ -76,9 +76,8 @@ class BaiduStock:
             stockdata = demjson.decode(text)
             fp.close()
             return stockdata
-            
-            
-    def run(self):
+    
+    def price(self):
         last_interupt = self.get_last_interrupt()
         stockdata = self.get_stock_list()
         
@@ -95,19 +94,20 @@ class BaiduStock:
             stocks = stockdata
         #stocks = stocks[:2]
         stocks_len = len(stocks)
-        
+        #print(stocks_len)
         for idx in range(0,stocks_len):
             stock = stocks[idx]
             try:
                 # 自动休眠
                 pricelist = self.get_price_list(stock['symbol'])
-                sleep_time = 5
+                sleep_time = 10
                 if pricelist is False:
                     for i in range(1,15):
-                        print('休眠'+str(sleep_time)+'秒...')
+                        print('''休眠%d秒...''' % sleep_time)
                         time.sleep(sleep_time)                                               
                         pricelist = self.get_price_list(stock['symbol'])
                         if pricelist is False:
+                            sleep_time = 10
                             break
                         else:
                             sleep_time += 10
@@ -117,11 +117,12 @@ class BaiduStock:
                 if pricelist is False:
                     self.unexpect_interrupt(stock['symbol'])
                     sys.exit('can not crawl stock price')                    
-                if len(pricelist)==0:
+                elif len(pricelist)==0:
                     continue
                     
                 self.save_price(stock['symbol'],pricelist)
-                time.sleep(5)
+                print('''休眠%d秒...''' % sleep_time)
+                time.sleep(sleep_time)
             except Exception as err:
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -132,5 +133,5 @@ class BaiduStock:
             
 
 bds = BaiduStock('00001')
-bds.run()
+bds.price()
             
