@@ -18,13 +18,10 @@ class BaiduStock:
     stock_list_file = './stock_list_hk.json'
     logfile = './runtime.log'
     
-    def __init__(self,symbol):
+    def __init__(self):
         self.ctime = time.time()
         #print(config)
         self.conn(**config)
-        s = requests.session()
-        s.keep_alive = False
-        requests.adapters.DEFAULT_RETRIES = 5
         
     def get_price_url(self,symbol):
         start = time.strftime('%Y%m%d')
@@ -37,8 +34,11 @@ class BaiduStock:
         self.dbcur = conn.cursor()
         
     def get_price_list(self,symbol):
+        requests.adapters.DEFAULT_RETRIES = 5
+        s = requests.session()
+        s.keep_alive = False
         url = self.get_price_url(symbol)
-        resp = requests.get(url)
+        resp = s.get(url)
         if int(resp.status_code) == 200:
             arr = demjson.decode(resp.text)
             price_list = arr['mashData']
@@ -135,6 +135,6 @@ class BaiduStock:
                 self.unexpect_interrupt(stock['symbol'])
             
 
-bds = BaiduStock('00001')
+bds = BaiduStock()
 bds.price()
             
