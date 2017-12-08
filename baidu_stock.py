@@ -18,6 +18,7 @@ class BaiduStock:
     stock_list_file = './stock_list_hk.json'
     logfile = './runtime.log'
     req = None
+    lockfile = './lock'
     
     def __init__(self):
         self.ctime = time.time()
@@ -40,7 +41,7 @@ class BaiduStock:
     def get_price_list(self,symbol):
 
         url = self.get_price_url(symbol)
-        resp = self.req.get(url,verify=False)
+        resp = self.req.get(url)
         if int(resp.status_code) == 200:
             arr = demjson.decode(resp.text)
             price_list = arr['mashData']
@@ -81,8 +82,28 @@ class BaiduStock:
             stockdata = demjson.decode(text)
             fp.close()
             return stockdata
-    
+     
+    def lock(self):
+        if os.path.isfile(self.lockfile) is False:
+            with open(self.lockfile,'w+') as f:
+                f.close()
+                
+    def unlock(self):
+        if os.path.isfile(self.lockfile):
+            os.remove(self.lockfile)
+            
+    def islock(self):
+        if os.path.isfile(self.lockfile):
+            return True
+        else:
+            return False
+        
     def price(self):
+        if self.islock():
+            sys.exit(0)
+        else:
+            self.lock()
+            
         last_interupt = self.get_last_interrupt()
         stockdata = self.get_stock_list()
         
@@ -136,8 +157,10 @@ class BaiduStock:
                 print(err)
             finally:
                 self.unexpect_interrupt(stock['symbol'])
+                self.unlock()
             
 
 bds = BaiduStock()
 bds.price()
+#bds.unlock()
             
