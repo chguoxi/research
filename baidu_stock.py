@@ -22,6 +22,9 @@ class BaiduStock:
         self.ctime = time.time()
         #print(config)
         self.conn(**config)
+        s = requests.session()
+        s.keep_alive = False
+        requests.adapters.DEFAULT_RETRIES = 5
         
     def get_price_url(self,symbol):
         start = time.strftime('%Y%m%d')
