@@ -128,11 +128,11 @@ class BaiduStock:
                 pricelist = self.get_price_list(stock['symbol'])
                 sleep_time = 10
                 if pricelist is False:
-                    for i in range(1,3):
-                        print('''休眠%d秒...''' % sleep_time)
+                    for i in range(0,3):
+                        print('''第%d次获取列表数据错误，休眠%d秒后继续尝试...''' % (i+1,sleep_time))
                         time.sleep(sleep_time)                                               
                         pricelist = self.get_price_list(stock['symbol'])
-                        if pricelist is False:
+                        if pricelist is not False:
                             sleep_time = 10
                             break
                         else:
@@ -155,10 +155,10 @@ class BaiduStock:
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 print(exc_type, fname, exc_tb.tb_lineno)
                 print(err)
+                self.unlock()
             finally:
                 self.unexpect_interrupt(stock['symbol'])
-                self.unlock()
-            
+        self.unlock()
 
 bds = BaiduStock()
 bds.price()
