@@ -17,11 +17,15 @@ class BaiduStock:
     price_count = 600
     stock_list_file = './stock_list_hk.json'
     logfile = './runtime.log'
+    req = None
     
     def __init__(self):
         self.ctime = time.time()
         #print(config)
         self.conn(**config)
+        requests.adapters.DEFAULT_RETRIES = 5
+        self.req = requests.session()
+        self.req.keep_alive = False
         
     def get_price_url(self,symbol):
         start = time.strftime('%Y%m%d')
@@ -34,11 +38,9 @@ class BaiduStock:
         self.dbcur = conn.cursor()
         
     def get_price_list(self,symbol):
-        requests.adapters.DEFAULT_RETRIES = 5
-        s = requests.session()
-        s.keep_alive = False
+
         url = self.get_price_url(symbol)
-        resp = s.get(url)
+        resp = self.req.get(url,verify=False)
         if int(resp.status_code) == 200:
             arr = demjson.decode(resp.text)
             price_list = arr['mashData']
@@ -105,7 +107,7 @@ class BaiduStock:
                 pricelist = self.get_price_list(stock['symbol'])
                 sleep_time = 10
                 if pricelist is False:
-                    for i in range(1,15):
+                    for i in range(1,3):
                         print('''休眠%d秒...''' % sleep_time)
                         time.sleep(sleep_time)                                               
                         pricelist = self.get_price_list(stock['symbol'])
@@ -113,13 +115,14 @@ class BaiduStock:
                             sleep_time = 10
                             break
                         else:
-                            sleep_time += 10
+                            sleep_time += 60
                             continue
                 #print(pricelist)
                 #sys.exit()
                 if pricelist is False:
                     self.unexpect_interrupt(stock['symbol'])
-                    sys.exit('can not crawl stock price')                    
+                    print('request price failed ...')
+                    sys.exit(0)                    
                 elif len(pricelist)==0:
                     continue
                     
